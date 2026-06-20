@@ -67,29 +67,53 @@ export async function POST(req: NextRequest) {
 
   try {
     if (provider === "gemini") {
-      const model = body.model || "gemini-2.0-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: [{ role: "user", parts: [{ text: user }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.3 },
-        }),
-      });
-      const data = await r.json();
-      if (!r.ok) {
-        return NextResponse.json(
-          { error: data?.error?.message || "Erro na API Gemini." },
-          { status: r.status }
-        );
+      // Tenta varios modelos em sequencia: usa o primeiro com cota gratuita.
+      const candidatos = body.model
+        ? [body.model]
+        : [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-flash-latest",
+            "gemini-2.5-flash-lite",
+            "gemini-1.5-flash",
+          ];
+      let ultimoErro = "Erro na API Gemini.";
+      let ultimoStatus = 502;
+      for (const model of candidatos) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: system }] },
+            contents: [{ role: "user", parts: [{ text: user }] }],
+            generationConfig: { maxOutputTokens: 8192, temperature: 0.3 },
+          }),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          const texto = (data?.candidates?.[0]?.content?.parts || [])
+            .map((p: { text?: string }) => p.text || "")
+            .join("\n")
+            .trim();
+          return NextResponse.json({ resultado: texto, provider, model });
+        }
+        ultimoErro = data?.error?.message || ultimoErro;
+        ultimoStatus = r.status;
+        // 429 (cota) ou 404 (modelo indisponivel): tenta o proximo modelo.
+        // Outros erros (ex.: 401 chave invalida): para imediatamente.
+        if (r.status !== 429 && r.status !== 404) break;
       }
-      const texto = (data?.candidates?.[0]?.content?.parts || [])
-        .map((p: { text?: string }) => p.text || "")
-        .join("\n")
-        .trim();
-      return NextResponse.json({ resultado: texto, provider, model });
+      return NextResponse.json(
+        {
+          error:
+            ultimoStatus === 429
+              ? "Todos os modelos gratuitos do Gemini estao com cota esgotada para esta chave no momento. Detalhe: " +
+                ultimoErro
+              : ultimoErro,
+        },
+        { status: ultimoStatus }
+      );
     }
 
     if (provider === "anthropic") {
