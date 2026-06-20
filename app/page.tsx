@@ -10,7 +10,7 @@ interface Arquivo {
 }
 
 export default function Home() {
-  const [provider, setProvider] = useState<"anthropic" | "openai">("anthropic");
+  const [provider, setProvider] = useState<"gemini" | "anthropic" | "openai">("gemini");
   const [projeto, setProjeto] = useState<Arquivo | null>(null);
   const [editais, setEditais] = useState<Arquivo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,14 +106,15 @@ export default function Home() {
         <label>Provedor</label>
         <select
           value={provider}
-          onChange={(e) => setProvider(e.target.value as "anthropic" | "openai")}
+          onChange={(e) => setProvider(e.target.value as "gemini" | "anthropic" | "openai")}
         >
+          <option value="gemini">Google Gemini (gratuito)</option>
           <option value="anthropic">Anthropic (Claude)</option>
           <option value="openai">OpenAI (GPT)</option>
         </select>
         <p className="hint">
-          A chave de API fica configurada no servidor (variavel de ambiente na
-          Vercel). Escolha o provedor cuja chave foi configurada.
+          A chave de API fica configurada no servidor (variavel de ambiente).
+          O Gemini tem nivel gratuito. Escolha o provedor cuja chave foi configurada.
         </p>
       </div>
 

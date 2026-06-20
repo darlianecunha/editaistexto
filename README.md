@@ -11,17 +11,21 @@ Aplicativo web que avalia a aderencia de um projeto de pesquisa a um ou mais edi
 
 ## Chave de IA (somente no servidor)
 
-A chave de API NAO e digitada no app. Ela e configurada como variavel de ambiente:
+A chave de API NAO e digitada no app. Ela e configurada como variavel de ambiente.
+Provedores suportados:
 
-- `ANTHROPIC_API_KEY` para usar o Claude
-- `OPENAI_API_KEY` para usar o GPT
+- `GEMINI_API_KEY` para o Google Gemini (tem nivel GRATUITO, recomendado). Chave em https://aistudio.google.com/apikey
+- `ANTHROPIC_API_KEY` para o Claude (pago, via console.anthropic.com)
+- `OPENAI_API_KEY` para o GPT (pago, via platform.openai.com)
 
-Na interface voce apenas escolhe o provedor cuja chave foi configurada.
+Na interface voce apenas escolhe o provedor cuja chave foi configurada (Gemini e o padrao).
+
+Observacao: assinaturas de chat (Claude Pro/Max, ChatGPT Plus) NAO incluem acesso a API. A API e cobrada a parte. Por isso o Gemini gratuito e a opcao sem custo.
 
 ### Onde configurar
 
-- Vercel: Settings > Environment Variables > adicione `ANTHROPIC_API_KEY` (ou `OPENAI_API_KEY`) e faca o redeploy.
-- Local: crie um arquivo `.env.local` na raiz com `ANTHROPIC_API_KEY=sua_chave`.
+- Vercel: Settings > Environment Variables > adicione `GEMINI_API_KEY` e faca o redeploy.
+- Local: crie um arquivo `.env.local` na raiz com `GEMINI_API_KEY=sua_chave`.
 
 ## Rodar localmente
 
@@ -29,7 +33,7 @@ Pre requisito: Node.js 18.18 ou superior.
 
 ```bash
 npm install
-echo "ANTHROPIC_API_KEY=sua_chave" > .env.local
+echo "GEMINI_API_KEY=sua_chave" > .env.local
 npm run dev
 ```
 
@@ -53,7 +57,7 @@ As pastas `node_modules` e `.next` ja estao no `.gitignore` e nao vao para o rep
 1. Acesse vercel.com e clique em **Add New > Project**.
 2. Importe o repositorio do GitHub.
 3. Framework: **Next.js** (detectado automaticamente).
-4. Em **Settings > Environment Variables**, adicione `ANTHROPIC_API_KEY` (ou `OPENAI_API_KEY`).
+4. Em **Settings > Environment Variables**, adicione `GEMINI_API_KEY` (gratuito).
 5. Clique em **Deploy**.
 
 ## Personalizar a base de conhecimento
