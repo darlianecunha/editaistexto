@@ -81,13 +81,22 @@ export async function POST(req: NextRequest) {
       let ultimoStatus = 502;
       for (const model of candidatos) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const generationConfig: Record<string, unknown> = {
+          maxOutputTokens: 16384,
+          temperature: 0.3,
+        };
+        // Modelos 2.5 usam "thinking" por padrao, o que consome o orcamento de
+        // saida e corta o relatorio. Desliga para o texto sair completo.
+        if (model.includes("2.5")) {
+          generationConfig.thinkingConfig = { thinkingBudget: 0 };
+        }
         const r = await fetch(url, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: system }] },
             contents: [{ role: "user", parts: [{ text: user }] }],
-            generationConfig: { maxOutputTokens: 8192, temperature: 0.3 },
+            generationConfig,
           }),
         });
         const data = await r.json();

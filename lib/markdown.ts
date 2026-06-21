@@ -25,16 +25,21 @@ export function markdownToHtml(md: string): string {
   while (i < lines.length) {
     const line = lines[i];
 
-    // Tabela
-    if (/^\s*\|.*\|\s*$/.test(line) && /^\s*\|[-:\s|]+\|\s*$/.test(lines[i + 1] || "")) {
+    // Tabela: linha que comeca com | e proxima linha de separacao (tracos/dois-pontos)
+    const pareceLinhaTabela = (l: string) => /^\s*\|.*\|?\s*$/.test(l) && l.includes("|");
+    const pareceSeparador = (l: string) =>
+      /^[\s|:\-]+$/.test(l) && l.includes("-") && l.includes("|");
+    if (pareceLinhaTabela(line) && pareceSeparador(lines[i + 1] || "")) {
       closeList();
-      const header = line.split("|").slice(1, -1).map((c) => c.trim());
+      const split = (l: string) =>
+        l.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+      const header = split(line);
       out.push("<table><thead><tr>");
       header.forEach((h) => out.push(`<th>${inline(h)}</th>`));
       out.push("</tr></thead><tbody>");
       i += 2;
-      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
-        const cells = lines[i].split("|").slice(1, -1).map((c) => c.trim());
+      while (i < lines.length && pareceLinhaTabela(lines[i]) && !pareceSeparador(lines[i])) {
+        const cells = split(lines[i]);
         out.push("<tr>");
         cells.forEach((c) => out.push(`<td>${inline(c)}</td>`));
         out.push("</tr>");
